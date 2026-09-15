@@ -1,186 +1,86 @@
 import React, { useState } from 'react';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import { useContract } from '../hooks/useContract';
 import InsuranceSelect, { PLANS } from './InsuranceSelect';
-
-const spin = keyframes`
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-`;
-
-const Wrapper = styled.div`max-width: 600px;`;
-
-const PageTitle = styled.h1`
-  font-size: 26px;
-  font-weight: 700;
-  color: ${theme.colors.text};
-  margin-bottom: 28px;
-  span { color: ${theme.colors.neon}; text-shadow: ${theme.shadows.neonGlowText}; }
-`;
-
-const Card = styled.div`
-  background: ${theme.colors.bgCard};
-  border: 1px solid ${theme.colors.borderDim};
-  border-radius: ${theme.borderRadius.lg};
-  padding: 24px;
-  margin-bottom: 16px;
-`;
-
-const SectionLabel = styled.h3`
-  font-size: 11px;
-  font-family: ${theme.fonts.mono};
-  color: ${theme.colors.neon};
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  opacity: 0.7;
-`;
+import {
+  Screen, PageTitle, Card, SectionLabel, FormGroup, Label, Input,
+  Divider, Button, StickyFooter, InlineError, Spinner,
+} from './ui/Primitives';
+import { IconMapPin, IconAlert } from './ui/Icon';
 
 const VehicleInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 `;
 
-const VehicleEmoji = styled.div`
-  font-size: 38px;
-  width: 68px;
-  height: 68px;
-  background: #111;
-  border: 1px solid ${theme.colors.borderDim};
-  border-radius: ${theme.borderRadius.md};
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const VehiclePhoto = styled.img`
+  width: 88px;
+  height: 66px;
+  object-fit: cover;
+  border-radius: ${theme.radius.sm};
   flex-shrink: 0;
 `;
 
-const FormGroup = styled.div`margin-bottom: 14px;`;
-
-const Label = styled.label`
-  display: block;
-  font-size: 12px;
-  color: ${theme.colors.textDim};
-  margin-bottom: 6px;
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: 10px 14px;
-  background: ${theme.colors.bgInput};
-  border: 1px solid ${theme.colors.borderDim};
-  border-radius: ${theme.borderRadius.md};
-  color: ${theme.colors.text};
-  font-family: ${theme.fonts.body};
-  font-size: 14px;
-  outline: none;
-  transition: ${theme.transitions.fast};
-  color-scheme: dark;
-
-  &:focus {
-    border-color: ${theme.colors.neon};
-    box-shadow: 0 0 0 2px rgba(0,255,136,0.08);
-  }
+const VehicleName = styled.p`font-size: 16px; font-weight: 700; color: ${theme.colors.text}; margin-bottom: 4px;`;
+const VehicleMeta = styled.p`
+  font-size: 12.5px;
+  color: ${theme.colors.textSecondary};
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
 `;
 
 const PriceSummary = styled.div`
-  background: ${theme.colors.neonFaint};
-  border: 1px solid ${theme.colors.borderDim};
-  border-radius: ${theme.borderRadius.md};
-  padding: 16px;
+  background: ${theme.colors.surfaceMuted};
+  border-radius: ${theme.radius.sm};
+  padding: 14px 16px;
 `;
 
 const PriceRow = styled.div`
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 13.5px;
   margin-bottom: 8px;
   &:last-child { margin-bottom: 0; }
 `;
 
-const PriceLabel = styled.span`color: ${theme.colors.textDim};`;
+const PriceLabel = styled.span`color: ${theme.colors.textSecondary};`;
 const PriceValue = styled.span`
-  font-family: ${theme.fonts.mono};
-  color: ${props => props.$highlight ? theme.colors.neon : theme.colors.text};
-  font-weight: ${props => props.$highlight ? 700 : 400};
-  font-size: ${props => props.$highlight ? '16px' : '13px'};
-  text-shadow: ${props => props.$highlight ? theme.shadows.neonGlowText : 'none'};
-`;
-
-const Divider = styled.div`
-  height: 1px;
-  background: ${theme.colors.borderDim};
-  margin: 10px 0;
-`;
-
-const SubmitButton = styled.button`
-  width: 100%;
-  padding: 14px;
-  background: transparent;
-  border: 1px solid ${props => props.disabled ? '#2a2a2a' : theme.colors.neon};
-  color: ${props => props.disabled ? '#444' : theme.colors.neon};
-  font-family: ${theme.fonts.body};
-  font-size: 15px;
-  font-weight: 700;
-  border-radius: ${theme.borderRadius.md};
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  transition: ${theme.transitions.normal};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 4px;
-
-  &:hover:not(:disabled) {
-    background: ${theme.colors.neon};
-    color: #000;
-    box-shadow: ${theme.shadows.neonGlowHover};
-  }
-`;
-
-const Spinner = styled.div`
-  width: 16px; height: 16px;
-  border: 2px solid rgba(0,255,136,0.2);
-  border-top-color: ${theme.colors.neon};
-  border-radius: 50%;
-  animation: ${spin} 0.8s linear infinite;
-`;
-
-const ErrorMsg = styled.p`
-  color: #ff4455;
-  font-size: 12px;
-  margin-top: 10px;
-  font-family: ${theme.fonts.mono};
+  color: ${p => (p.$highlight ? theme.colors.primaryDark : theme.colors.text)};
+  font-weight: ${p => (p.$highlight ? 800 : 600)};
+  font-size: ${p => (p.$highlight ? '17px' : '13.5px')};
 `;
 
 export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
-  const [startDate,  setStartDate]  = useState('');
-  const [endDate,    setEndDate]    = useState('');
-  const [insurance,  setInsurance]  = useState(PLANS[0]);
-  const [loading,    setLoading]    = useState(false);
-  const [error,      setError]      = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [insurance, setInsurance] = useState(PLANS[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   // eslint-disable-next-line no-unused-vars
   const { getCarSharing } = useContract();
 
   if (!vehicle) {
     return (
-      <Wrapper>
-        <PageTitle>차량을 먼저 <span>선택</span>해주세요.</PageTitle>
-      </Wrapper>
+      <Screen>
+        <PageTitle>차량을 먼저 선택해주세요</PageTitle>
+      </Screen>
     );
   }
 
   const hours = startDate && endDate
     ? Math.max(0, (new Date(endDate) - new Date(startDate)) / 3600000)
     : 0;
-  const totalHours   = Math.ceil(hours);
-  const rentalFee    = totalHours * vehicle.pricePerHour;
+  const totalHours = Math.ceil(hours);
+  const rentalFee = totalHours * vehicle.pricePerHour;
   const insuranceFee = insurance?.price || 0;
-  const total        = rentalFee + insuranceFee;
+  const total = rentalFee + insuranceFee;
 
   const handleBook = async () => {
-    if (!wallet.isConnected)    { setError('MetaMask를 먼저 연결해주세요.'); return; }
+    if (!wallet.isConnected) { setError('MetaMask를 먼저 연결해주세요.'); return; }
     if (!wallet.isCorrectChain) { setError('Kaia Kairos 테스트넷으로 전환해주세요.'); return; }
     if (!startDate || !endDate || hours <= 0) { setError('대여 시간을 올바르게 입력해주세요.'); return; }
 
@@ -193,7 +93,7 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
       // const startEpoch = Math.floor(new Date(startDate).getTime() / 1000);
       // const endEpoch   = Math.floor(new Date(endDate).getTime() / 1000);
       // const tx = await contract.reserve(vehicle.address, startEpoch, endEpoch);
-      // addTxLog({ type: 'RESERVE', message: `${vehicle.name} 예약 요청`, status: 'pending' });
+      // addTxLog({ type: '예약', message: `${vehicle.name} 예약 요청`, status: 'pending' });
       // await tx.wait();
 
       await new Promise(r => setTimeout(r, 1500));
@@ -209,19 +109,17 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
   };
 
   return (
-    <Wrapper>
-      <PageTitle>차량 <span>예약</span></PageTitle>
+    <Screen>
+      <PageTitle>차량 예약</PageTitle>
 
       <Card>
         <SectionLabel>선택된 차량</SectionLabel>
         <VehicleInfo>
-          <VehicleEmoji>{vehicle.emoji}</VehicleEmoji>
+          <VehiclePhoto src={vehicle.image} alt={vehicle.name} />
           <div>
-            <p style={{ fontSize: 17, fontWeight: 700, color: theme.colors.text, marginBottom: 4 }}>{vehicle.name}</p>
-            <p style={{ fontSize: 13, color: theme.colors.textDim, marginBottom: 2 }}>📍 {vehicle.location}</p>
-            <p style={{ fontSize: 13, color: theme.colors.textDim }}>
-              💰 <span style={{ fontFamily: theme.fonts.mono, color: theme.colors.neon }}>{vehicle.pricePerHour.toLocaleString()}</span> W-KRW / 시간
-            </p>
+            <VehicleName>{vehicle.name}</VehicleName>
+            <VehicleMeta><IconMapPin size={12} /> {vehicle.location}</VehicleMeta>
+            <VehicleMeta>{vehicle.pricePerHour.toLocaleString()} W-KRW / 시간</VehicleMeta>
           </div>
         </VehicleInfo>
       </Card>
@@ -232,7 +130,7 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
           <Label>대여 시작</Label>
           <Input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} />
         </FormGroup>
-        <FormGroup style={{ marginBottom: 0 }}>
+        <FormGroup>
           <Label>반납 시간</Label>
           <Input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} min={startDate} />
         </FormGroup>
@@ -266,13 +164,13 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
         </PriceSummary>
       </Card>
 
-      <SubmitButton onClick={handleBook} disabled={loading || total <= 0}>
-        {loading
-          ? <><Spinner /> 트랜잭션 처리 중...</>
-          : `${total > 0 ? total.toLocaleString() + ' W-KRW ' : ''}결제 및 예약 확정`
-        }
-      </SubmitButton>
-      {error && <ErrorMsg>⚠ {error}</ErrorMsg>}
-    </Wrapper>
+      {error && <InlineError><IconAlert size={14} /> {error}</InlineError>}
+
+      <StickyFooter>
+        <Button onClick={handleBook} disabled={loading || total <= 0}>
+          {loading ? <><Spinner /> 트랜잭션 처리 중…</> : `${total > 0 ? total.toLocaleString() + ' W-KRW ' : ''}결제 및 예약 확정`}
+        </Button>
+      </StickyFooter>
+    </Screen>
   );
 }

@@ -1,112 +1,120 @@
-import React from 'react';
-import styled, { keyframes } from 'styled-components';
+import React, { useState } from 'react';
+import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import { shortenAddress } from '../utils/kaia';
-
-const pulse = keyframes`
-  0%, 100% { box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
-  50%       { box-shadow: 0 0 20px rgba(0, 255, 136, 0.9), 0 0 40px rgba(0, 255, 136, 0.4); }
-`;
-
-const Wrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
+import { IconWallet, IconLogout } from './ui/Icon';
 
 const ConnectButton = styled.button`
-  padding: 8px 20px;
-  background: transparent;
-  border: 1px solid ${theme.colors.neon};
-  color: ${theme.colors.neon};
-  font-family: ${theme.fonts.mono};
-  font-size: 13px;
-  border-radius: ${theme.borderRadius.md};
-  cursor: pointer;
-  transition: ${theme.transitions.normal};
-  animation: ${props => props.$connecting ? pulse : 'none'} 1s ease-in-out infinite;
-
-  &:hover:not(:disabled) {
-    background: ${theme.colors.neon};
-    color: #000;
-    box-shadow: ${theme.shadows.neonGlow};
-  }
-
-  &:disabled { cursor: not-allowed; }
-`;
-
-const AccountBadge = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: ${theme.colors.neonFaint};
-  border: 1px solid ${theme.colors.borderDim};
-  border-radius: ${theme.borderRadius.md};
+  gap: 6px;
+  padding: 7px 12px;
+  background: ${theme.colors.primary};
+  color: ${theme.colors.onPrimary};
+  border: none;
+  border-radius: ${theme.radius.pill};
+  font-family: ${theme.fonts.body};
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: ${p => (p.disabled ? 0.6 : 1)};
+`;
+
+const Wrap = styled.div`
+  position: relative;
+  flex-shrink: 0;
+`;
+
+const AccountChip = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: ${theme.colors.surfaceMuted};
+  border: none;
+  border-radius: ${theme.radius.pill};
+  cursor: pointer;
 `;
 
 const Dot = styled.span`
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: ${theme.colors.neon};
-  box-shadow: 0 0 8px ${theme.colors.neon};
+  background: ${theme.colors.primary};
+  flex-shrink: 0;
 `;
 
 const Address = styled.span`
-  font-family: ${theme.fonts.mono};
   font-size: 12px;
-  color: ${theme.colors.neon};
+  font-weight: 700;
+  color: ${theme.colors.text};
 `;
 
-const Balance = styled.span`
-  font-family: ${theme.fonts.mono};
-  font-size: 12px;
-  color: ${theme.colors.textDim};
+const Menu = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: ${theme.colors.surface};
+  border-radius: ${theme.radius.sm};
+  box-shadow: ${theme.shadows.cardHover};
+  padding: 12px 14px;
+  min-width: 168px;
+  z-index: 40;
 `;
 
-const DisconnectButton = styled.button`
-  padding: 6px 12px;
-  background: transparent;
-  border: 1px solid ${theme.colors.borderDim};
-  color: ${theme.colors.textDim};
-  font-family: ${theme.fonts.mono};
-  font-size: 11px;
-  border-radius: ${theme.borderRadius.sm};
+const MenuBalance = styled.p`
+  font-size: 13px;
+  color: ${theme.colors.textSecondary};
+  margin-bottom: 10px;
+
+  b { color: ${theme.colors.text}; font-weight: 700; }
+`;
+
+const MenuButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 0 0;
+  border: none;
+  background: none;
+  border-top: 1px solid ${theme.colors.border};
+  color: ${theme.colors.danger};
+  font-family: ${theme.fonts.body};
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: ${theme.transitions.fast};
-
-  &:hover {
-    border-color: #ff4455;
-    color: #ff4455;
-  }
 `;
 
 export default function WalletConnect({ wallet }) {
   const { account, balance, status, isConnected, connect, disconnect } = wallet;
+  const [open, setOpen] = useState(false);
 
   if (isConnected) {
     return (
-      <Wrapper>
-        <AccountBadge>
+      <Wrap>
+        <AccountChip onClick={() => setOpen(o => !o)}>
           <Dot />
           <Address>{shortenAddress(account)}</Address>
-          {balance && <Balance>| {balance} KAIA</Balance>}
-        </AccountBadge>
-        <DisconnectButton onClick={disconnect}>해제</DisconnectButton>
-      </Wrapper>
+        </AccountChip>
+        {open && (
+          <Menu onMouseLeave={() => setOpen(false)}>
+            <MenuBalance>잔액 <b>{balance ?? '-'} KAIA</b></MenuBalance>
+            <MenuButton onClick={() => { disconnect(); setOpen(false); }}>
+              <IconLogout size={14} /> 연결 해제
+            </MenuButton>
+          </Menu>
+        )}
+      </Wrap>
     );
   }
 
   return (
-    <Wrapper>
-      <ConnectButton
-        $connecting={status === 'connecting' ? 1 : 0}
-        onClick={connect}
-        disabled={status === 'connecting'}
-      >
-        {status === 'connecting' ? '연결 중...' : 'MetaMask 연결'}
-      </ConnectButton>
-    </Wrapper>
+    <ConnectButton onClick={connect} disabled={status === 'connecting'}>
+      <IconWallet size={14} />
+      {status === 'connecting' ? '연결 중…' : '지갑 연결'}
+    </ConnectButton>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useWallet } from './hooks/useWallet';
+import { theme } from './styles/theme';
 import Layout from './components/Layout';
 import OnboardingScreen from './components/OnboardingScreen';
 import VehicleList from './components/VehicleList';
@@ -7,6 +8,8 @@ import BookingForm from './components/BookingForm';
 import ActiveRental from './components/ActiveRental';
 import RegisterVehicle from './components/RegisterVehicle';
 import TransactionLog from './components/TransactionLog';
+import HomeDashboard from './components/HomeDashboard';
+import { Screen } from './components/ui/Primitives';
 
 export default function App() {
   const wallet = useWallet();
@@ -27,14 +30,14 @@ export default function App() {
 
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
-    setCurrentPage(selectedRole === 'host' ? 'register' : 'vehicles');
+    setCurrentPage(selectedRole === 'host' ? 'register' : 'home');
   };
 
   const handleSwitchRole = () => {
     setRole(null);
     setSelectedVehicle(null);
     setActiveRental(null);
-    setCurrentPage('vehicles');
+    setCurrentPage('home');
   };
 
   const handleVehicleSelect = (vehicle) => {
@@ -61,6 +64,12 @@ export default function App() {
     switch (currentPage) {
       case 'vehicles':
         return <VehicleList onSelect={handleVehicleSelect} />;
+      case 'home':
+        return <HomeDashboard wallet={wallet} onNavigate={(page) => page === 'switchHost' ? handleRoleSelect('host') : setCurrentPage(page)} />;
+      case 'pickup':
+        return <VehicleList mode="pickup" onBack={() => setCurrentPage('home')} onSelect={handleVehicleSelect} />;
+      case 'delivery':
+        return <VehicleList mode="delivery" onBack={() => setCurrentPage('home')} onSelect={handleVehicleSelect} />;
       case 'book':
         return <BookingForm vehicle={selectedVehicle} wallet={wallet} addTxLog={addTxLog} onSuccess={handleBookingSuccess} />;
       case 'active':
@@ -93,16 +102,18 @@ export default function App() {
 
 function ComingSoon({ label }) {
   return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '80px 20px', textAlign: 'center',
-    }}>
-      <div style={{ fontSize: 48, marginBottom: 16 }}>🚧</div>
-      <p style={{ fontSize: 20, fontWeight: 700, color: '#e0e0e0', marginBottom: 8 }}>{label}</p>
-      <p style={{
-        fontSize: 13, color: '#666', fontFamily: "'Space Mono', monospace",
-        border: '1px solid rgba(0,255,136,0.2)', padding: '6px 16px', borderRadius: 20,
-      }}>COMING SOON</p>
-    </div>
+    <Screen>
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        justifyContent: 'center', padding: '72px 20px', textAlign: 'center',
+      }}>
+        <div style={{ width: 44, height: 4, borderRadius: 99, background: theme.colors.primary, marginBottom: 24 }} />
+        <p style={{ fontSize: 17, fontWeight: 800, color: theme.colors.text, marginBottom: 8 }}>{label}</p>
+        <p style={{
+          fontSize: 12, fontWeight: 700, color: theme.colors.textSecondary,
+          background: theme.colors.surfaceMuted, padding: '6px 16px', borderRadius: 999,
+        }}>COMING SOON</p>
+      </div>
+    </Screen>
   );
 }

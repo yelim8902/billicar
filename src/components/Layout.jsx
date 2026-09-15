@@ -2,147 +2,147 @@ import React from 'react';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import WalletConnect from './WalletConnect';
+import { IconHome, IconCalendar, IconKey, IconDocument, IconCar, IconChart, IconAlert } from './ui/Icon';
 
-const Wrapper = styled.div`
+const Backdrop = styled.div`
+  min-height: 100vh;
+  background: #F4F5F6;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+`;
+
+const Shell = styled.div`
+  width: 100%;
+  max-width: ${theme.layout.maxWidth};
   min-height: 100vh;
   background: ${theme.colors.bg};
-  font-family: ${theme.fonts.body};
-`;
-
-const Header = styled.header`
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 60px;
-  background: #0d0d0d;
-  border-bottom: 1px solid ${theme.colors.borderDim};
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-  z-index: 100;
-`;
-
-const Logo = styled.div`
-  font-family: ${theme.fonts.mono};
-  font-size: 20px;
-  font-weight: 700;
-  color: ${theme.colors.neon};
-  text-shadow: ${theme.shadows.neonGlowText};
-  letter-spacing: 2px;
-  cursor: pointer;
-  span { color: ${theme.colors.text}; }
-`;
-
-const Sidebar = styled.aside`
-  position: fixed;
-  top: 60px; left: 0;
-  width: 220px;
-  height: calc(100vh - 60px);
-  background: #0d0d0d;
-  border-right: 1px solid ${theme.colors.borderDim};
-  padding: 24px 0;
-  z-index: 90;
+  position: relative;
   display: flex;
   flex-direction: column;
-`;
 
-const RoleBadge = styled.div`
-  margin: 0 16px 20px;
-  padding: 8px 14px;
-  background: ${theme.colors.neonFaint};
-  border: 1px solid ${theme.colors.borderDim};
-  border-radius: ${theme.borderRadius.md};
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`;
-
-const RoleLabel = styled.span`
-  font-family: ${theme.fonts.mono};
-  font-size: 11px;
-  color: ${theme.colors.neon};
-  letter-spacing: 1px;
-`;
-
-const SwitchBtn = styled.button`
-  background: transparent;
-  border: none;
-  font-size: 10px;
-  color: ${theme.colors.textDim};
-  cursor: pointer;
-  font-family: ${theme.fonts.mono};
-  padding: 0;
-  transition: ${theme.transitions.fast};
-
-  &:hover { color: ${theme.colors.neon}; }
-`;
-
-const NavItem = styled.button`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 24px;
-  background: ${props => props.$active ? theme.colors.neonFaint : 'transparent'};
-  border: none;
-  border-left: 3px solid ${props => props.$active ? theme.colors.neon : 'transparent'};
-  color: ${props => props.$active ? theme.colors.neon : theme.colors.textDim};
-  font-family: ${theme.fonts.body};
-  font-size: 14px;
-  font-weight: ${props => props.$active ? 700 : 400};
-  text-align: left;
-  cursor: pointer;
-  transition: ${theme.transitions.normal};
-
-  &:hover {
-    background: ${theme.colors.neonFaint};
-    color: ${theme.colors.neon};
-    border-left-color: ${theme.colors.neonDim};
+  @media (min-width: 540px) {
+    box-shadow: 0 0 0 1px ${theme.colors.border};
   }
 `;
 
-const NavIcon = styled.span`font-size: 18px; line-height: 1;`;
+const TopBar = styled.header`
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: ${theme.layout.topBarHeight};
+  padding: 0 16px 0 20px;
+  padding-top: env(safe-area-inset-top, 0px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid ${theme.colors.border};
+`;
 
-const SidebarFooter = styled.div`
-  margin-top: auto;
-  padding: 16px 24px;
-  border-top: 1px solid ${theme.colors.borderDim};
-  font-family: ${theme.fonts.mono};
-  font-size: 10px;
-  color: ${theme.colors.textDim};
-  line-height: 1.6;
+const LogoWordmark = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 800;
+  color: ${theme.colors.text};
+  letter-spacing: -0.3px;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  span { color: ${theme.colors.primary}; }
+`;
+
+const RoleChip = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: ${theme.radius.pill};
+  background: ${theme.colors.surfaceMuted};
+  color: ${theme.colors.textSecondary};
+  font-family: ${theme.fonts.body};
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+`;
+
+const TopRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 `;
 
 const Main = styled.main`
-  margin-left: 220px;
-  margin-top: 60px;
-  padding: 32px;
-  min-height: calc(100vh - 60px);
+  flex: 1;
+  padding-bottom: calc(${theme.layout.bottomNavHeight} + ${theme.layout.activityDockHeight} + 20px + env(safe-area-inset-bottom, 0px));
 `;
 
 const NetworkWarning = styled.div`
-  background: rgba(255, 68, 85, 0.08);
-  border: 1px solid #ff4455;
-  color: #ff4455;
-  padding: 10px 16px;
-  border-radius: ${theme.borderRadius.md};
-  font-size: 13px;
-  font-family: ${theme.fonts.mono};
-  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: ${theme.colors.warningLight};
+  color: #B4630B;
+  padding: 12px 14px;
+  border-radius: ${theme.radius.sm};
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 16px 20px 0;
+
+  svg { flex-shrink: 0; }
+`;
+
+const BottomNav = styled.nav`
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: ${theme.layout.maxWidth};
+  height: calc(${theme.layout.bottomNavHeight} + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: ${theme.colors.surface};
+  border-top: 1px solid ${theme.colors.border};
+  box-shadow: ${theme.shadows.nav};
+  display: flex;
+  z-index: 30;
+`;
+
+const NavItem = styled.button`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  color: ${p => (p.$active ? theme.colors.primary : theme.colors.textTertiary)};
+  cursor: pointer;
+`;
+
+const NavLabel = styled.span`
+  font-size: 11px;
+  font-weight: ${p => (p.$active ? 700 : 500)};
 `;
 
 const NAV = {
   renter: [
-    { key: 'vehicles', icon: '🚗', label: '차량 목록' },
-    { key: 'book',     icon: '📅', label: '예약하기' },
-    { key: 'active',   icon: '🔑', label: '현재 렌탈' },
+    { key: 'home', label: '홈', Icon: IconHome },
+    { key: 'book', label: '예약', Icon: IconCalendar },
+    { key: 'active', label: '내 렌탈', Icon: IconKey },
   ],
   host: [
-    { key: 'register', icon: '✨', label: '차량 등록 (NFT)' },
-    { key: 'myVehicles', icon: '🚙', label: '내 차량 관리' },
-    { key: 'earnings',   icon: '💰', label: '수익 현황' },
+    { key: 'register', label: '차량 등록', Icon: IconDocument },
+    { key: 'myVehicles', label: '내 차량', Icon: IconCar },
+    { key: 'earnings', label: '수익', Icon: IconChart },
   ],
 };
 
@@ -150,48 +150,42 @@ export default function Layout({ wallet, currentPage, onNavigate, role, onSwitch
   const navItems = NAV[role] || NAV.renter;
 
   return (
-    <Wrapper>
-      <Header>
-        <Logo onClick={() => onNavigate(navItems[0].key)}>
-          MOBI<span>TRUST</span>
-        </Logo>
-        <WalletConnect wallet={wallet} />
-      </Header>
+    <Backdrop>
+      <Shell>
+        <TopBar>
+          <LogoWordmark onClick={() => onNavigate(navItems[0].key)}>
+            Mobi<span>Trust</span>
+          </LogoWordmark>
+          <TopRight>
+            <RoleChip onClick={onSwitchRole}>
+              {role === 'renter' ? '이용자' : '호스트'} 전환
+            </RoleChip>
+            <WalletConnect wallet={wallet} />
+          </TopRight>
+        </TopBar>
 
-      <Sidebar>
-        <RoleBadge>
-          <RoleLabel>
-            {role === 'renter' ? '🚗 이용자' : '🏠 호스트'}
-          </RoleLabel>
-          <SwitchBtn onClick={onSwitchRole}>전환 →</SwitchBtn>
-        </RoleBadge>
-
-        {navItems.map(item => (
-          <NavItem
-            key={item.key}
-            $active={currentPage === item.key}
-            onClick={() => onNavigate(item.key)}
-          >
-            <NavIcon>{item.icon}</NavIcon>
-            {item.label}
-          </NavItem>
-        ))}
-
-        <SidebarFooter>
-          CHAIN: Kaia Kairos<br />
-          ID: 1001<br />
-          TOKEN: W-KRW
-        </SidebarFooter>
-      </Sidebar>
-
-      <Main>
         {wallet.isConnected && !wallet.isCorrectChain && (
           <NetworkWarning>
-            ⚠ Kaia Kairos 테스트넷(Chain ID: 1001)으로 전환해주세요. 현재 Chain ID: {wallet.chainId}
+            <IconAlert size={16} />
+            Kaia Kairos 테스트넷(Chain ID 1001)으로 전환해주세요. 현재: {wallet.chainId}
           </NetworkWarning>
         )}
-        {children}
-      </Main>
-    </Wrapper>
+
+        <Main>{children}</Main>
+
+        <BottomNav>
+          {navItems.map(item => (
+            <NavItem
+              key={item.key}
+              $active={currentPage === item.key}
+              onClick={() => onNavigate(item.key)}
+            >
+              <item.Icon size={22} />
+              <NavLabel $active={currentPage === item.key}>{item.label}</NavLabel>
+            </NavItem>
+          ))}
+        </BottomNav>
+      </Shell>
+    </Backdrop>
   );
 }
