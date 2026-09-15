@@ -28,8 +28,8 @@ const STATUS = {
   disputed: { label: '분쟁 처리 중', tone: 'warning' },
 };
 
-export default function MyBookings({ userId, onFindVehicle }) {
-  const { bookings, loading, error, cancel } = useBookings(userId);
+export default function MyBookings({ userId, onFindVehicle, onStart }) {
+  const { bookings, loading, error, cancel, start } = useBookings(userId);
   const [actionError, setActionError] = useState('');
 
   const handleCancel = async (id) => {
@@ -38,6 +38,16 @@ export default function MyBookings({ userId, onFindVehicle }) {
       await cancel(id);
     } catch (cancelError) {
       setActionError(cancelError.message || '예약을 취소하지 못했습니다.');
+    }
+  };
+
+  const handleStart = async (id) => {
+    setActionError('');
+    try {
+      await start(id);
+      onStart?.();
+    } catch (startError) {
+      setActionError(startError.message || '이용을 시작하지 못했습니다.');
     }
   };
 
@@ -66,6 +76,7 @@ export default function MyBookings({ userId, onFindVehicle }) {
               </DateBox>
               <Meta>{booking.insuranceName} · 보증금 {booking.depositAmount.toLocaleString()} W-KRW</Meta>
               <Price>{booking.totalAmount.toLocaleString()} W-KRW</Price>
+              {booking.status === 'confirmed' && <GhostButton style={{ marginTop: 12 }} onClick={() => handleStart(booking.id)}>이용 시작</GhostButton>}
               {booking.status === 'pending' && <GhostButton style={{ marginTop: 12 }} onClick={() => handleCancel(booking.id)}>예약 취소</GhostButton>}
             </Body>
           </BookingCard>

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { ethers } from 'ethers';
 import { theme } from '../styles/theme';
-import { createBooking } from '../services/bookingRepository';
+import { useContract } from '../hooks/useContract';
+import { createBooking, getHostWalletAddress } from '../services/bookingRepository';
+import RentalEscrowData from '../contracts/RentalEscrow.json';
 import InsuranceSelect, { PLANS } from './InsuranceSelect';
 import {
   Screen, PageTitle, Card, SectionLabel, FormGroup, Label, Input,
@@ -65,7 +68,9 @@ export default function BookingForm({ userId, vehicle, wallet, walletProfile, ad
   const [endDate, setEndDate] = useState('');
   const [insurance, setInsurance] = useState(PLANS[0]);
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState('');
   const [error, setError] = useState('');
+  const { getMockWKRW, getRentalEscrow } = useContract();
 
   if (!vehicle) {
     return (
@@ -95,27 +100,38 @@ export default function BookingForm({ userId, vehicle, wallet, walletProfile, ad
     setError('');
 
     try {
-      // TODO: RentalEscrow/MockWKRW 주소·ABI 설정 후 여기서 온체인 예치를 먼저 하고,
-      // 성공한 tx 해시를 createBooking에 같이 넘겨서 payments 테이블에도 기록해야 합니다.
-      // (지금은 Supabase에 예약만 저장하고 실제 토큰 이동은 없는 상태 — contracts/README.md 참고)
-      //
-      // const bookingId = ethers.id(<사전에 생성한 booking uuid>); // bytes32 키
-      // const wkrw = await getMockWKRW(true);
-      // await (await wkrw.approve(RentalEscrowData.address, total)).wait();
-      // const escrow = await getRentalEscrow(true);
-      // const tx = await escrow.deposit(bookingId, hostWalletAddress, rentalFee, insuranceFee, depositAmount);
-      // addTxLog({ type: '예약', message: '예치 트랜잭션 처리 중', status: 'pending' });
-      // await tx.wait();
+      // 차주가 지갑을 아직 안 연결했거나 데모 차량(host 없음)이면 플랫폼 지갑으로 예치
+      // (해커톤 MVP 간소화 — 원래는 차주 지갑 필수로 강제해야 함)
+      const escrow = await getRentalEscrow(true);
+      const hostAddress = (await getHostWalletAddress(vehicle.hostId)) || (await escrow.platformWallet());
 
-      const booking = await createBooking({ userId, vehicle, startDate, endDate, insurance });
+      const bookingId = window.crypto.randomUUID();
+      const bookingIdHash = ethers.id(bookingId);
+      const rentalFeeUnits = ethers.parseUnits(String(rentalFee), 18);
+      const insuranceFeeUnits = ethers.parseUnits(String(insuranceFee), 18);
+      const depositUnits = ethers.parseUnits(String(depositAmount), 18);
+      const totalUnits = rentalFeeUnits + insuranceFeeUnits + depositUnits;
+
+      setStep('W-KRW 사용 승인 중…');
+      const wkrw = await getMockWKRW(true);
+      await (await wkrw.approve(RentalEscrowData.address, totalUnits)).wait();
+
+      setStep('예치 트랜잭션 처리 중…');
+      addTxLog({ type: '예약', message: '예치 트랜잭션 처리 중', status: 'pending' });
+      const tx = await escrow.deposit(bookingIdHash, hostAddress, rentalFeeUnits, insuranceFeeUnits, depositUnits);
+      await tx.wait();
+
+      setStep('예약 저장 중…');
+      const booking = await createBooking({ id: bookingId, userId, vehicle, startDate, endDate, insurance, txHash: tx.hash });
       addTxLog({ type: '예약', message: `${vehicle.name}을(를) ${totalHours}시간 예약했어요 (${insurance?.name} 적용)`, status: 'success' });
       onSuccess(booking);
     } catch (err) {
-      const msg = err.message || '예약 저장에 실패했습니다.';
+      const msg = err.shortMessage || err.reason || err.message || '예약 처리에 실패했습니다.';
       setError(msg);
       addTxLog({ type: '예약', message: `예약 중 문제가 생겼어요: ${msg}`, status: 'error' });
     } finally {
       setLoading(false);
+      setStep('');
     }
   };
 
@@ -183,7 +199,7 @@ export default function BookingForm({ userId, vehicle, wallet, walletProfile, ad
 
       <StickyFooter>
         <Button onClick={handleBook} disabled={loading || total <= 0}>
-          {loading ? <><Spinner /> 예약 확인 중…</> : `${total > 0 ? total.toLocaleString() + ' W-KRW ' : ''}예약하기`}
+          {loading ? <><Spinner /> {step || '예약 확인 중…'}</> : `${total > 0 ? total.toLocaleString() + ' W-KRW ' : ''}예약하기`}
         </Button>
       </StickyFooter>
     </Screen>

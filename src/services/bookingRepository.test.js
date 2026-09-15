@@ -47,3 +47,18 @@ test('returns a helpful message for overlapping reservations', async () => {
   mockBookingResult.mockResolvedValue({ data: null, error: { code: '23P01' } });
   await expect(createBooking(input)).rejects.toThrow('이미 예약이 있어요');
 });
+
+test('confirms the booking and records an escrowed payment when a tx hash is given', async () => {
+  await createBooking({ ...input, id: 'booking-1', txHash: '0xabc' });
+  expect(mockBookingInsert).toHaveBeenCalledWith(expect.objectContaining({
+    id: 'booking-1',
+    status: 'confirmed',
+  }));
+  expect(mockBookingInsert).toHaveBeenCalledWith(expect.objectContaining({
+    booking_id: 'booking-1',
+    kind: 'rental',
+    status: 'escrowed',
+    tx_hash: '0xabc',
+    amount: 155000,
+  }));
+});

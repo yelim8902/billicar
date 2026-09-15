@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { cancelBooking, listMyBookings } from '../services/bookingRepository';
+import { cancelBooking, listMyBookings, startBooking } from '../services/bookingRepository';
 
 export function useBookings(userId) {
   const [bookings, setBookings] = useState([]);
@@ -26,5 +26,10 @@ export function useBookings(userId) {
     await refresh();
   };
 
-  return { bookings, loading, error, cancel, refresh };
+  const start = async (bookingId) => {
+    await startBooking(bookingId);
+    await refresh();
+  };
+
+  return { bookings, loading, error, cancel, start, refresh };
 }

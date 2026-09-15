@@ -24,7 +24,6 @@ export default function App() {
   const [role,            setRole]            = useState(null);   // null | 'renter' | 'host'
   const [currentPage,     setCurrentPage]     = useState('vehicles');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [activeRental,    setActiveRental]    = useState(null);
   const [txLogs,          setTxLogs]          = useState([]);
 
   const addTxLog = (log) => {
@@ -43,7 +42,6 @@ export default function App() {
   const handleSwitchRole = () => {
     setRole(null);
     setSelectedVehicle(null);
-    setActiveRental(null);
     setCurrentPage('home');
   };
 
@@ -52,13 +50,12 @@ export default function App() {
     setCurrentPage('book');
   };
 
-  const handleBookingSuccess = (rental) => {
+  const handleBookingSuccess = () => {
     setCurrentPage('bookings');
   };
 
   const handleRentalEnd = () => {
-    setActiveRental(null);
-    setCurrentPage('vehicles');
+    setCurrentPage('bookings');
   };
 
   // 역할 미선택 시 온보딩 화면
@@ -87,9 +84,9 @@ export default function App() {
       case 'book':
         return <BookingForm userId={auth.user.id} vehicle={selectedVehicle} wallet={wallet} walletProfile={walletProfile} addTxLog={addTxLog} onSuccess={handleBookingSuccess} />;
       case 'bookings':
-        return <MyBookings userId={auth.user.id} onFindVehicle={() => setCurrentPage('pickup')} />;
+        return <MyBookings userId={auth.user.id} onFindVehicle={() => setCurrentPage('pickup')} onStart={() => setCurrentPage('active')} />;
       case 'active':
-        return <ActiveRental rental={activeRental} wallet={wallet} addTxLog={addTxLog} onEnd={handleRentalEnd} />;
+        return <ActiveRental userId={auth.user.id} wallet={wallet} addTxLog={addTxLog} onEnd={handleRentalEnd} />;
       case 'register':
         return <RegisterVehicle userId={auth.user.id} wallet={wallet} walletProfile={walletProfile} addTxLog={addTxLog} />;
       case 'mypage':
