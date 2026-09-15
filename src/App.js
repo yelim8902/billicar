@@ -14,7 +14,8 @@ import TransactionLog from './components/TransactionLog';
 import HomeDashboard from './components/HomeDashboard';
 import MyPage from './components/MyPage';
 import MyBookings from './components/MyBookings';
-import { Screen } from './components/ui/Primitives';
+import MyVehicles from './components/MyVehicles';
+import Earnings from './components/Earnings';
 
 export default function App() {
   const auth = useAuth();
@@ -92,8 +93,9 @@ export default function App() {
       case 'mypage':
         return <MyPage auth={auth} wallet={wallet} walletProfile={walletProfile} onSwitchRole={handleSwitchRole} />;
       case 'myVehicles':
+        return <MyVehicles userId={auth.user.id} onRegister={() => setCurrentPage('register')} />;
       case 'earnings':
-        return <ComingSoon label={currentPage === 'myVehicles' ? '내 차량 관리' : '수익 현황'} />;
+        return <Earnings userId={auth.user.id} />;
       default:
         return <VehicleList onSelect={handleVehicleSelect} />;
     }
@@ -125,23 +127,5 @@ function LoadingScreen() {
     }}>
       MobiTrust
     </div>
-  );
-}
-
-function ComingSoon({ label }) {
-  return (
-    <Screen>
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', padding: '72px 20px', textAlign: 'center',
-      }}>
-        <div style={{ width: 44, height: 4, borderRadius: 99, background: theme.colors.primary, marginBottom: 24 }} />
-        <p style={{ fontSize: 17, fontWeight: 800, color: theme.colors.text, marginBottom: 8 }}>{label}</p>
-        <p style={{
-          fontSize: 12, fontWeight: 700, color: theme.colors.textSecondary,
-          background: theme.colors.surfaceMuted, padding: '6px 16px', borderRadius: 999,
-        }}>COMING SOON</p>
-      </div>
-    </Screen>
   );
 }

@@ -195,7 +195,7 @@ export default function RegisterVehicle({ userId, wallet, walletProfile, addTxLo
           <Help>해커톤 데모에서는 등록 즉시 대여 가능 상태로 자동 승인됩니다.</Help>
         </Card>
 
-        {success && <SuccessBox><IconCheck size={17} /><span><b>차량 등록 완료!</b><br />이용자 화면과 지도에서 ${success.make} ${success.model}을 확인할 수 있어요.</span></SuccessBox>}
+        {success && <SuccessBox><IconCheck size={17} /><span><b>차량 등록 완료!</b><br />이용자 화면과 지도에서 {success.make} {success.model}을 확인할 수 있어요.</span></SuccessBox>}
         {error && <InlineError><IconAlert size={14} /> {error}</InlineError>}
         <StickyFooter>
           <Button type="submit" disabled={loading}>{loading ? <><Spinner /> 저장 중…</> : <><IconDocument size={18} /> 차량 등록하기</>}</Button>

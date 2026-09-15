@@ -21,6 +21,7 @@ function mapBooking(row) {
     insuranceName: row.insurance_plans?.name || '보험 없음',
     vehicle: {
       id: row.vehicles?.id,
+      hostId: row.vehicles?.host_id || null,
       name: `${row.vehicles?.make || ''} ${row.vehicles?.model || ''}`.trim(),
       location: row.vehicles?.location_name,
       image: imageUrl(photos[0]?.storage_path),
@@ -108,7 +109,7 @@ export async function listMyBookings(userId) {
   if (!supabase || !userId) return [];
   const { data, error } = await supabase
     .from('bookings')
-    .select('id,status,starts_at,ends_at,rental_fee,insurance_fee,deposit_amount,total_amount,pickup_type,insurance_plans(name),vehicles(id,make,model,location_name,vehicle_photos(storage_path,is_primary))')
+    .select('id,status,starts_at,ends_at,rental_fee,insurance_fee,deposit_amount,total_amount,pickup_type,insurance_plans(name),vehicles(id,host_id,make,model,location_name,vehicle_photos(storage_path,is_primary))')
     .eq('renter_id', userId)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -136,4 +137,44 @@ export async function completeBooking(bookingId) {
   if (!supabase) return;
   const { error } = await supabase.from('bookings').update({ status: 'completed' }).eq('id', bookingId);
   if (error) throw error;
+}
+
+/// 온체인 release() 성공 후, 그 결과(Released 이벤트 값)를 settlements에 기록.
+/// 렌터(반납 버튼을 누른 사람)가 기록하는 구조라 RLS에서 booking의 renter_id/vehicle의 host_id를
+/// 대조해서 검증함 (202609150006 마이그레이션). 데모 차량처럼 host가 없는 경우엔 호출하는 쪽에서
+/// 애초에 부르지 않으면 됨 — host_id가 not null 제약이라 여기서도 막힘.
+export async function recordSettlement({ bookingId, hostId, grossAmount, platformFee, txHash }) {
+  if (!supabase || !hostId) return;
+  const { error } = await supabase.from('settlements').insert({
+    booking_id: bookingId,
+    host_id: hostId,
+    gross_amount: grossAmount,
+    platform_fee: platformFee,
+    status: 'completed',
+    tx_hash: txHash,
+    settled_at: new Date().toISOString(),
+  });
+  // 정산 자체(온체인 송금)는 이미 끝났고 이건 기록용이라, 실패해도 반납 흐름 자체를 막지 않음.
+  if (error) console.error('settlements insert 실패 (온체인 정산은 이미 완료됨):', error);
+}
+
+export async function listMyEarnings(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from('settlements')
+    .select('id,gross_amount,platform_fee,host_amount,status,tx_hash,settled_at,bookings(starts_at,vehicles(make,model))')
+    .eq('host_id', userId)
+    .order('settled_at', { ascending: false });
+  if (error) throw error;
+  return data.map(row => ({
+    id: row.id,
+    vehicleName: `${row.bookings?.vehicles?.make || ''} ${row.bookings?.vehicles?.model || ''}`.trim() || '차량 정보 없음',
+    rentedAt: row.bookings?.starts_at,
+    grossAmount: Number(row.gross_amount),
+    platformFee: Number(row.platform_fee),
+    hostAmount: Number(row.host_amount),
+    status: row.status,
+    txHash: row.tx_hash,
+    settledAt: row.settled_at,
+  }));
 }

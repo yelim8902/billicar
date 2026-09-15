@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { theme } from '../styles/theme';
 import { useContract } from '../hooks/useContract';
 import { useBookings } from '../hooks/useBookings';
-import { completeBooking } from '../services/bookingRepository';
+import { completeBooking, recordSettlement } from '../services/bookingRepository';
 import {
   Screen, PageTitle, Card, SectionLabel, Chip, DangerButton,
   StickyFooter, InlineError, SpinnerDark, EmptyState,
@@ -137,7 +137,25 @@ export default function ActiveRental({ userId, wallet, addTxLog, onEnd }) {
       const contract = await getRentalEscrow(true);
       const tx = await contract.release(ethers.id(rental.id));
       addTxLog({ type: '반납', message: '운행 종료 요청', status: 'pending' });
-      await tx.wait();
+      const receipt = await tx.wait();
+
+      // 실제 온체인에서 얼마씩 나뉘었는지 이벤트 로그에서 직접 읽어서 settlements에 기록
+      // (직접 재계산하지 않고 이벤트 값을 그대로 써서 컨트랙트 실제 결과와 항상 일치하게 함)
+      const released = receipt.logs
+        .map(log => { try { return contract.interface.parseLog(log); } catch { return null; } })
+        .find(log => log?.name === 'Released');
+      if (released && rental.vehicle.hostId) {
+        // 온체인 값은 18자리 소수 단위라 DB에 쓰는 정수 KRW 단위로 환산해야 함 (bigint라 JSON 직렬화도 안 됨)
+        const hostAmount = Number(ethers.formatUnits(released.args.hostAmount, 18));
+        const platformFee = Number(ethers.formatUnits(released.args.platformFee, 18));
+        await recordSettlement({
+          bookingId: rental.id,
+          hostId: rental.vehicle.hostId,
+          grossAmount: hostAmount + platformFee,
+          platformFee,
+          txHash: tx.hash,
+        });
+      }
 
       await completeBooking(rental.id);
       await refresh();

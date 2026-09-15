@@ -42,6 +42,33 @@ export async function listVehicles() {
   return { vehicles: data.map(toVehicle), source: 'supabase' };
 }
 
+const STATUS_LABEL = {
+  draft: '등록 대기', pending_review: '검토 중', available: '대여 가능',
+  reserved: '예약됨', rented: '대여 중', maintenance: '점검 중', inactive: '비활성',
+};
+
+export async function listMyVehicles(userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from('vehicles')
+    .select('id,make,model,status,price_per_hour,location_name,vehicle_photos(storage_path,is_primary,sort_order)')
+    .eq('host_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data.map(row => {
+    const photos = [...(row.vehicle_photos || [])].sort((a, b) => Number(b.is_primary) - Number(a.is_primary));
+    return {
+      id: row.id,
+      name: `${row.make} ${row.model}`,
+      location: row.location_name,
+      pricePerHour: Number(row.price_per_hour),
+      status: row.status,
+      statusLabel: STATUS_LABEL[row.status] || row.status,
+      image: resolveImage(photos[0]),
+    };
+  });
+}
+
 async function sha256(value) {
   const bytes = new TextEncoder().encode(value.trim().toUpperCase());
   const digest = await window.crypto.subtle.digest('SHA-256', bytes);
