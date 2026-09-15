@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+jest.mock('./components/VehicleMap', () => function MockVehicleMap() {
+  return <div data-testid="vehicle-map" />;
+});
+
+test('renders the MobiTrust onboarding choices', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: 'Mobi Trust' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /차량 빌려타기/ })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /내 차 빌려주기/ })).toBeInTheDocument();
 });
