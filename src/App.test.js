@@ -25,10 +25,6 @@ jest.mock('./hooks/useLinkedWallet', () => ({
   }),
 }));
 
-jest.mock('./components/VehicleMap', () => function MockVehicleMap() {
-  return <div data-testid="vehicle-map" />;
-});
-
 test('renders the MobiTrust onboarding choices', () => {
   render(<App />);
   expect(screen.getByRole('heading', { level: 1, name: 'Mobi Trust' })).toBeInTheDocument();

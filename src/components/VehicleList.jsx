@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import VehicleCard from './VehicleCard';
-import VehicleMap from './VehicleMap';
 import { useVehicles } from '../hooks/useVehicles';
 import { Screen, PageTitle, PageSubtitle, SmallButton, EmptyState } from './ui/Primitives';
 import { IconSearch, IconCar, IconChevronLeft, IconClock } from './ui/Icon';
@@ -40,7 +39,9 @@ const FilterRow = styled.div`
 
 const BackTitle = styled.div`display:flex;align-items:center;gap:10px;margin:2px 0 18px; button{border:0;background:none;padding:4px;color:${theme.colors.text};} h1{font-size:24px;margin:0;letter-spacing:-.6px;}`;
 const TimeCard = styled.div`display:flex;align-items:center;gap:11px;background:#F5F6F7;border-radius:15px;padding:17px;margin-bottom:14px; div{flex:1} b{font-size:15px} p{font-size:13px;margin:5px 0 0;color:${theme.colors.textSecondary}} button{border:0;background:none;color:${theme.colors.primaryDark};font-size:14px;font-weight:700}`;
-const Map = styled.div`height:260px;margin:0 -20px;border-top:1px solid ${theme.colors.border};border-bottom:1px solid ${theme.colors.border};overflow:hidden;`;
+const Map = styled.div`height:260px;margin:0 -20px;border-top:1px solid ${theme.colors.border};border-bottom:1px solid ${theme.colors.border};overflow:hidden;position:relative;`;
+const MapImage = styled.img`width:100%;height:100%;object-fit:cover;display:block;`;
+const MapBadge = styled.span`position:absolute;left:12px;bottom:12px;background:rgba(20,20,20,.72);color:#fff;font-size:11px;font-weight:600;padding:5px 10px;border-radius:999px;`;
 const ResultHead = styled.div`display:flex;justify-content:space-between;align-items:end;margin:22px 0 14px;h2{font-size:21px;margin:0}span{font-size:13px;color:${theme.colors.textSecondary}}`;
 
 export default function VehicleList({ onSelect, mode = 'default', onBack }) {
@@ -81,7 +82,7 @@ export default function VehicleList({ onSelect, mode = 'default', onBack }) {
         ))}
       </FilterRow>
 
-      {mode === 'pickup' && <><Map><VehicleMap vehicles={filtered} onSelect={onSelect}/></Map><ResultHead><h2>지도 주변 차량</h2><span>{filtered.length}대</span></ResultHead></>}
+      {mode === 'pickup' && <><Map><MapImage src="/images/map/seoul-gangnam.jpg" alt="서울 강남 일대 지도" /><MapBadge>서울 강남 일대</MapBadge></Map><ResultHead><h2>지도 주변 차량</h2><span>{filtered.length}대</span></ResultHead></>}
       {mode === 'delivery' && <ResultHead><h2>부를 수 있는 차량</h2><span>{filtered.length}대</span></ResultHead>}
 
       {loading && <p style={{fontSize:13,color:theme.colors.textSecondary}}>차량 정보를 불러오는 중이에요…</p>}
