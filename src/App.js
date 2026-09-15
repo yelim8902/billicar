@@ -88,7 +88,7 @@ export default function App() {
       case 'active':
         return <ActiveRental rental={activeRental} wallet={wallet} addTxLog={addTxLog} onEnd={handleRentalEnd} />;
       case 'register':
-        return <RegisterVehicle wallet={wallet} addTxLog={addTxLog} />;
+        return <RegisterVehicle userId={auth.user.id} wallet={wallet} walletProfile={walletProfile} addTxLog={addTxLog} />;
       case 'myVehicles':
       case 'earnings':
         return <ComingSoon label={currentPage === 'myVehicles' ? '내 차량 관리' : '수익 현황'} />;

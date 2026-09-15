@@ -40,3 +40,80 @@ export async function listVehicles() {
   if (error) throw error;
   return { vehicles: data.map(toVehicle), source: 'supabase' };
 }
+
+async function sha256(value) {
+  const bytes = new TextEncoder().encode(value.trim().toUpperCase());
+  const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function maskPlateNumber(value) {
+  const normalized = value.replace(/\s/g, '');
+  if (normalized.length < 4) return '****';
+  return `${normalized.slice(0, 2)}**${normalized.slice(-2)}`;
+}
+
+function imageExtension(file) {
+  const byType = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+  return byType[file.type] || 'jpg';
+}
+
+export async function createVehicle({ userId, vehicle, imageFile }) {
+  if (!supabase || !isSupabaseConfigured) throw new Error('Supabase 연결이 필요합니다.');
+  if (!userId) throw new Error('로그인이 필요합니다.');
+  if (!imageFile) throw new Error('대표 차량 사진을 추가해주세요.');
+
+  const vehicleId = window.crypto.randomUUID();
+  const storagePath = `${userId}/${vehicleId}/primary.${imageExtension(imageFile)}`;
+  let imageUploaded = false;
+  let vehicleCreated = false;
+
+  try {
+    const { error: uploadError } = await supabase.storage
+      .from('vehicle-images')
+      .upload(storagePath, imageFile, { contentType: imageFile.type, upsert: false });
+    if (uploadError) throw uploadError;
+    imageUploaded = true;
+
+    const payload = {
+      id: vehicleId,
+      host_id: userId,
+      status: 'available',
+      vin_hash: await sha256(vehicle.vin),
+      plate_number_masked: maskPlateNumber(vehicle.plateNumber),
+      make: vehicle.make.trim(),
+      model: vehicle.model.trim(),
+      year: Number(vehicle.year),
+      seat_count: Number(vehicle.seats),
+      fuel_type: vehicle.fuelType,
+      price_per_hour: Number(vehicle.pricePerHour),
+      deposit_amount: Number(vehicle.depositAmount),
+      location_name: vehicle.location.trim(),
+      latitude: Number(vehicle.latitude),
+      longitude: Number(vehicle.longitude),
+    };
+
+    const { data, error: vehicleError } = await supabase
+      .from('vehicles')
+      .insert(payload)
+      .select('id, make, model, status')
+      .single();
+    if (vehicleError) throw vehicleError;
+    vehicleCreated = true;
+
+    const { error: photoError } = await supabase.from('vehicle_photos').insert({
+      vehicle_id: vehicleId,
+      storage_path: storagePath,
+      is_primary: true,
+      sort_order: 0,
+    });
+    if (photoError) throw photoError;
+
+    return data;
+  } catch (error) {
+    if (vehicleCreated) await supabase.from('vehicles').delete().eq('id', vehicleId);
+    if (imageUploaded) await supabase.storage.from('vehicle-images').remove([storagePath]);
+    if (error.code === '23505') throw new Error('이미 등록된 차량이거나 지갑 정보가 중복되었습니다.');
+    throw error;
+  }
+}

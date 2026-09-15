@@ -15,7 +15,7 @@ export function useLinkedWallet(user) {
     }
     const { data, error: walletError } = await supabase
       .from('wallets')
-      .select('id, address, chain_id, is_primary, created_at')
+      .select('id, user_id, address, chain_id, is_primary, created_at')
       .eq('user_id', user.id)
       .eq('is_primary', true)
       .maybeSingle();
