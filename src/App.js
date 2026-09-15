@@ -12,6 +12,7 @@ import ActiveRental from './components/ActiveRental';
 import RegisterVehicle from './components/RegisterVehicle';
 import TransactionLog from './components/TransactionLog';
 import HomeDashboard from './components/HomeDashboard';
+import MyPage from './components/MyPage';
 import { Screen } from './components/ui/Primitives';
 
 export default function App() {
@@ -89,6 +90,8 @@ export default function App() {
         return <ActiveRental rental={activeRental} wallet={wallet} addTxLog={addTxLog} onEnd={handleRentalEnd} />;
       case 'register':
         return <RegisterVehicle userId={auth.user.id} wallet={wallet} walletProfile={walletProfile} addTxLog={addTxLog} />;
+      case 'mypage':
+        return <MyPage auth={auth} wallet={wallet} walletProfile={walletProfile} onSwitchRole={handleSwitchRole} />;
       case 'myVehicles':
       case 'earnings':
         return <ComingSoon label={currentPage === 'myVehicles' ? '내 차량 관리' : '수익 현황'} />;

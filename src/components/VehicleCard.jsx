@@ -104,7 +104,7 @@ export default function VehicleCard({ vehicle, onSelect, compact = false }) {
           <Name>{vehicle.name}</Name>
         </TopRow>
         <Location><IconMapPin size={13} /> {vehicle.location} · {vehicle.distance}</Location>
-        <Tags>{vehicle.tags?.map(tag => <Tag key={tag}>{tag}</Tag>)}</Tags>
+        <Tags>{vehicle.isDemo && <Tag>데모 차량</Tag>}{vehicle.tags?.map(tag => <Tag key={tag}>{tag}</Tag>)}</Tags>
         <BottomRow>
           <Price>{vehicle.pricePerHour.toLocaleString()}<span>W-KRW/시간</span></Price>
           {available && <MiniButton onClick={e => { e.stopPropagation(); onSelect(vehicle); }}>예약하기</MiniButton>}

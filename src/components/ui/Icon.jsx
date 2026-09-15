@@ -99,3 +99,7 @@ export const IconLogout = (p) => (
 export const IconBolt = (p) => (
   <Svg {...p}><path d="M12.5 3 5 13.5h5.5L11 21l7.5-10.5H13L12.5 3Z" /></Svg>
 );
+
+export const IconUser = (p) => (
+  <Svg {...p}><circle cx="12" cy="8" r="3.5" /><path d="M5.5 20a6.5 6.5 0 0 1 13 0" /></Svg>
+);

@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import WalletConnect from './WalletConnect';
 import UserMenu from './UserMenu';
-import { IconHome, IconCalendar, IconKey, IconDocument, IconCar, IconChart, IconAlert } from './ui/Icon';
+import { IconHome, IconCalendar, IconKey, IconDocument, IconCar, IconChart, IconAlert, IconUser } from './ui/Icon';
 
 const Backdrop = styled.div`
   min-height: 100vh;
@@ -139,11 +139,13 @@ const NAV = {
     { key: 'home', label: '홈', Icon: IconHome },
     { key: 'book', label: '예약', Icon: IconCalendar },
     { key: 'active', label: '내 렌탈', Icon: IconKey },
+    { key: 'mypage', label: '마이', Icon: IconUser },
   ],
   host: [
     { key: 'register', label: '차량 등록', Icon: IconDocument },
     { key: 'myVehicles', label: '내 차량', Icon: IconCar },
     { key: 'earnings', label: '수익', Icon: IconChart },
+    { key: 'mypage', label: '마이', Icon: IconUser },
   ],
 };
 

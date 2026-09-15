@@ -25,6 +25,7 @@ function toVehicle(row) {
     status: row.status,
     image: resolveImage(photos[0]),
     tags: [row.fuel_type === 'electric' ? '전기' : row.fuel_type, `${row.seat_count}인승`],
+    isDemo: false,
   };
 }
 
@@ -38,7 +39,7 @@ export async function listVehicles() {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return { vehicles: data.map(toVehicle), source: 'supabase' };
+  return { vehicles: [...data.map(toVehicle), ...SEED_VEHICLES], source: data.length ? 'hybrid' : 'seed' };
 }
 
 async function sha256(value) {
