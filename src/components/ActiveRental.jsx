@@ -97,7 +97,7 @@ export default function ActiveRental({ rental, wallet, addTxLog, onEnd }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   // eslint-disable-next-line no-unused-vars
-  const { getCarSharing } = useContract();
+  const { getRentalEscrow } = useContract();
   const elapsed = useElapsed(rental?.startDate);
 
   if (!rental) {
@@ -118,9 +118,11 @@ export default function ActiveRental({ rental, wallet, addTxLog, onEnd }) {
     setError('');
 
     try {
-      // TODO: CarSharing.json ABI 설정 후 아래 주석을 해제하세요
-      // const contract = await getCarSharing(true);
-      // const tx = await contract.checkout();
+      // TODO: RentalEscrow.json 주소/ABI 설정 후 아래 주석을 해제하세요 (contracts/README.md 참고)
+      // 반납 확인은 지금 플랫폼(owner)만 release를 호출할 수 있어서, 정식 연동 전까지는
+      // 백엔드/운영 로직에서 반납을 확인한 뒤 release를 호출하는 흐름을 먼저 설계해야 합니다.
+      // const contract = await getRentalEscrow(true);
+      // const tx = await contract.release(ethers.id(rental.id));
       // addTxLog({ type: '반납', message: '운행 종료 요청', status: 'pending' });
       // await tx.wait();
 

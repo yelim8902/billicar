@@ -13,6 +13,7 @@ import RegisterVehicle from './components/RegisterVehicle';
 import TransactionLog from './components/TransactionLog';
 import HomeDashboard from './components/HomeDashboard';
 import MyPage from './components/MyPage';
+import MyBookings from './components/MyBookings';
 import { Screen } from './components/ui/Primitives';
 
 export default function App() {
@@ -52,8 +53,7 @@ export default function App() {
   };
 
   const handleBookingSuccess = (rental) => {
-    setActiveRental(rental);
-    setCurrentPage('active');
+    setCurrentPage('bookings');
   };
 
   const handleRentalEnd = () => {
@@ -85,7 +85,9 @@ export default function App() {
       case 'delivery':
         return <VehicleList mode="delivery" onBack={() => setCurrentPage('home')} onSelect={handleVehicleSelect} />;
       case 'book':
-        return <BookingForm vehicle={selectedVehicle} wallet={wallet} addTxLog={addTxLog} onSuccess={handleBookingSuccess} />;
+        return <BookingForm userId={auth.user.id} vehicle={selectedVehicle} wallet={wallet} walletProfile={walletProfile} addTxLog={addTxLog} onSuccess={handleBookingSuccess} />;
+      case 'bookings':
+        return <MyBookings userId={auth.user.id} onFindVehicle={() => setCurrentPage('pickup')} />;
       case 'active':
         return <ActiveRental rental={activeRental} wallet={wallet} addTxLog={addTxLog} onEnd={handleRentalEnd} />;
       case 'register':

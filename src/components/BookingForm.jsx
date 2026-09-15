@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
-import { useContract } from '../hooks/useContract';
+import { createBooking } from '../services/bookingRepository';
 import InsuranceSelect, { PLANS } from './InsuranceSelect';
 import {
   Screen, PageTitle, Card, SectionLabel, FormGroup, Label, Input,
@@ -54,14 +54,18 @@ const PriceValue = styled.span`
   font-size: ${p => (p.$highlight ? '17px' : '13.5px')};
 `;
 
-export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
+function localDateTimeMin() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
+}
+
+export default function BookingForm({ userId, vehicle, wallet, walletProfile, addTxLog, onSuccess }) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [insurance, setInsurance] = useState(PLANS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // eslint-disable-next-line no-unused-vars
-  const { getCarSharing } = useContract();
 
   if (!vehicle) {
     return (
@@ -77,30 +81,37 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
   const totalHours = Math.ceil(hours);
   const rentalFee = totalHours * vehicle.pricePerHour;
   const insuranceFee = insurance?.price || 0;
-  const total = rentalFee + insuranceFee;
+  const depositAmount = Number(vehicle.depositAmount || 0);
+  const total = rentalFee + insuranceFee + depositAmount;
 
   const handleBook = async () => {
     if (!wallet.isConnected) { setError('MetaMask를 먼저 연결해주세요.'); return; }
     if (!wallet.isCorrectChain) { setError('Kaia Kairos 테스트넷으로 전환해주세요.'); return; }
+    if (walletProfile.linkedWallet?.address?.toLowerCase() !== wallet.account?.toLowerCase()) { setError('현재 지갑을 로그인 계정에 연결해주세요.'); return; }
     if (!startDate || !endDate || hours <= 0) { setError('대여 시간을 올바르게 입력해주세요.'); return; }
+    if (new Date(startDate) <= new Date()) { setError('대여 시작은 현재 시간 이후여야 해요.'); return; }
 
     setLoading(true);
     setError('');
 
     try {
-      // TODO: CarSharing.json ABI 설정 후 아래 주석을 해제하세요
-      // const contract = await getCarSharing(true);
-      // const startEpoch = Math.floor(new Date(startDate).getTime() / 1000);
-      // const endEpoch   = Math.floor(new Date(endDate).getTime() / 1000);
-      // const tx = await contract.reserve(vehicle.address, startEpoch, endEpoch);
-      // addTxLog({ type: '예약', message: `${vehicle.name} 예약 요청`, status: 'pending' });
+      // TODO: RentalEscrow/MockWKRW 주소·ABI 설정 후 여기서 온체인 예치를 먼저 하고,
+      // 성공한 tx 해시를 createBooking에 같이 넘겨서 payments 테이블에도 기록해야 합니다.
+      // (지금은 Supabase에 예약만 저장하고 실제 토큰 이동은 없는 상태 — contracts/README.md 참고)
+      //
+      // const bookingId = ethers.id(<사전에 생성한 booking uuid>); // bytes32 키
+      // const wkrw = await getMockWKRW(true);
+      // await (await wkrw.approve(RentalEscrowData.address, total)).wait();
+      // const escrow = await getRentalEscrow(true);
+      // const tx = await escrow.deposit(bookingId, hostWalletAddress, rentalFee, insuranceFee, depositAmount);
+      // addTxLog({ type: '예약', message: '예치 트랜잭션 처리 중', status: 'pending' });
       // await tx.wait();
 
-      await new Promise(r => setTimeout(r, 1500));
+      const booking = await createBooking({ userId, vehicle, startDate, endDate, insurance });
       addTxLog({ type: '예약', message: `${vehicle.name}을(를) ${totalHours}시간 예약했어요 (${insurance?.name} 적용)`, status: 'success' });
-      onSuccess({ vehicle, startDate, endDate, total, insurance });
+      onSuccess(booking);
     } catch (err) {
-      const msg = err.reason || err.message || '트랜잭션 실패';
+      const msg = err.message || '예약 저장에 실패했습니다.';
       setError(msg);
       addTxLog({ type: '예약', message: `예약 중 문제가 생겼어요: ${msg}`, status: 'error' });
     } finally {
@@ -128,7 +139,7 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
         <SectionLabel>대여 기간</SectionLabel>
         <FormGroup>
           <Label>대여 시작</Label>
-          <Input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <Input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} min={localDateTimeMin()} />
         </FormGroup>
         <FormGroup>
           <Label>반납 시간</Label>
@@ -156,6 +167,10 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
             <PriceLabel>보험료 ({insurance?.name})</PriceLabel>
             <PriceValue>{insuranceFee > 0 ? `${insuranceFee.toLocaleString()} W-KRW` : '무료'}</PriceValue>
           </PriceRow>
+          <PriceRow>
+            <PriceLabel>보증금 (반납 후 환불)</PriceLabel>
+            <PriceValue>{depositAmount.toLocaleString()} W-KRW</PriceValue>
+          </PriceRow>
           <Divider />
           <PriceRow>
             <PriceLabel>총 결제 금액</PriceLabel>
@@ -168,7 +183,7 @@ export default function BookingForm({ vehicle, wallet, addTxLog, onSuccess }) {
 
       <StickyFooter>
         <Button onClick={handleBook} disabled={loading || total <= 0}>
-          {loading ? <><Spinner /> 트랜잭션 처리 중…</> : `${total > 0 ? total.toLocaleString() + ' W-KRW ' : ''}결제 및 예약 확정`}
+          {loading ? <><Spinner /> 예약 확인 중…</> : `${total > 0 ? total.toLocaleString() + ' W-KRW ' : ''}예약하기`}
         </Button>
       </StickyFooter>
     </Screen>

@@ -137,7 +137,7 @@ const NavLabel = styled.span`
 const NAV = {
   renter: [
     { key: 'home', label: '홈', Icon: IconHome },
-    { key: 'book', label: '예약', Icon: IconCalendar },
+    { key: 'bookings', label: '예약', Icon: IconCalendar },
     { key: 'active', label: '내 렌탈', Icon: IconKey },
     { key: 'mypage', label: '마이', Icon: IconUser },
   ],

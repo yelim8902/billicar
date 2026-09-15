@@ -25,7 +25,7 @@ function toVehicle(row) {
     status: row.status,
     image: resolveImage(photos[0]),
     tags: [row.fuel_type === 'electric' ? '전기' : row.fuel_type, `${row.seat_count}인승`],
-    isDemo: false,
+    isDemo: Boolean(row.is_demo),
   };
 }
 
@@ -34,12 +34,12 @@ export async function listVehicles() {
 
   const { data, error } = await supabase
     .from('vehicles')
-    .select('id,host_id,status,make,model,year,seat_count,fuel_type,price_per_hour,deposit_amount,location_name,latitude,longitude,vehicle_photos(storage_path,is_primary,sort_order)')
+    .select('id,host_id,status,make,model,year,seat_count,fuel_type,price_per_hour,deposit_amount,location_name,latitude,longitude,is_demo,vehicle_photos(storage_path,is_primary,sort_order)')
     .in('status', ['available', 'rented'])
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return { vehicles: [...data.map(toVehicle), ...SEED_VEHICLES], source: data.length ? 'hybrid' : 'seed' };
+  return { vehicles: data.map(toVehicle), source: 'supabase' };
 }
 
 async function sha256(value) {
