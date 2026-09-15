@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { ethers } from 'ethers';
 import { theme } from '../styles/theme';
 import { useContract } from '../hooks/useContract';
+import { useBookings } from '../hooks/useBookings';
+import { completeBooking, recordSettlement } from '../services/bookingRepository';
 import {
   Screen, PageTitle, Card, SectionLabel, Chip, DangerButton,
   StickyFooter, InlineError, SpinnerDark, EmptyState,
@@ -93,12 +96,22 @@ function useElapsed(startDate) {
   return elapsed;
 }
 
-export default function ActiveRental({ rental, wallet, addTxLog, onEnd }) {
+export default function ActiveRental({ userId, wallet, addTxLog, onEnd }) {
+  const { bookings, loading: bookingsLoading, refresh } = useBookings(userId);
+  const rental = bookings.find(b => b.status === 'active') || null;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // eslint-disable-next-line no-unused-vars
-  const { getCarSharing } = useContract();
+  const { getRentalEscrow } = useContract();
   const elapsed = useElapsed(rental?.startDate);
+
+  if (bookingsLoading) {
+    return (
+      <Screen>
+        <PageTitle>내 렌탈</PageTitle>
+        <EmptyState><p>불러오는 중이에요…</p></EmptyState>
+      </Screen>
+    );
+  }
 
   if (!rental) {
     return (
@@ -114,21 +127,42 @@ export default function ActiveRental({ rental, wallet, addTxLog, onEnd }) {
 
   const handleEnd = async () => {
     if (!wallet.isConnected) { setError('MetaMask를 먼저 연결해주세요.'); return; }
+    if (!wallet.isCorrectChain) { setError('Kaia Kairos 테스트넷으로 전환해주세요.'); return; }
     setLoading(true);
     setError('');
 
     try {
-      // TODO: CarSharing.json ABI 설정 후 아래 주석을 해제하세요
-      // const contract = await getCarSharing(true);
-      // const tx = await contract.checkout();
-      // addTxLog({ type: '반납', message: '운행 종료 요청', status: 'pending' });
-      // await tx.wait();
+      // 반납 확인/정산 승인은 지금 플랫폼(owner) 지갑만 호출 가능함 — 데모에선 배포한
+      // 지갑으로 직접 눌러서 넘기면 되고, 실서비스면 이 권한을 누가 행사할지 별도 설계 필요 (HANDOFF 참고)
+      const contract = await getRentalEscrow(true);
+      const tx = await contract.release(ethers.id(rental.id));
+      addTxLog({ type: '반납', message: '운행 종료 요청', status: 'pending' });
+      const receipt = await tx.wait();
 
-      await new Promise(r => setTimeout(r, 1500));
-      addTxLog({ type: '정산', message: `${rental.vehicle.name} 반납 완료! ${rental.total.toLocaleString()} W-KRW가 즉시 정산됐어요`, status: 'success' });
+      // 실제 온체인에서 얼마씩 나뉘었는지 이벤트 로그에서 직접 읽어서 settlements에 기록
+      // (직접 재계산하지 않고 이벤트 값을 그대로 써서 컨트랙트 실제 결과와 항상 일치하게 함)
+      const released = receipt.logs
+        .map(log => { try { return contract.interface.parseLog(log); } catch { return null; } })
+        .find(log => log?.name === 'Released');
+      if (released && rental.vehicle.hostId) {
+        // 온체인 값은 18자리 소수 단위라 DB에 쓰는 정수 KRW 단위로 환산해야 함 (bigint라 JSON 직렬화도 안 됨)
+        const hostAmount = Number(ethers.formatUnits(released.args.hostAmount, 18));
+        const platformFee = Number(ethers.formatUnits(released.args.platformFee, 18));
+        await recordSettlement({
+          bookingId: rental.id,
+          hostId: rental.vehicle.hostId,
+          grossAmount: hostAmount + platformFee,
+          platformFee,
+          txHash: tx.hash,
+        });
+      }
+
+      await completeBooking(rental.id);
+      await refresh();
+      addTxLog({ type: '정산', message: `${rental.vehicle.name} 반납 완료! ${rental.totalAmount.toLocaleString()} W-KRW가 즉시 정산됐어요`, status: 'success' });
       onEnd();
     } catch (err) {
-      const msg = err.reason || err.message || '트랜잭션 실패';
+      const msg = err.shortMessage || err.reason || err.message || '트랜잭션 실패';
       setError(msg);
       addTxLog({ type: '반납', message: `반납 중 문제가 생겼어요: ${msg}`, status: 'error' });
     } finally {
@@ -172,7 +206,7 @@ export default function ActiveRental({ rental, wallet, addTxLog, onEnd }) {
         </TimerBox>
         <InfoItem>
           <InfoLabel>예상 결제 금액</InfoLabel>
-          <InfoValue $highlight style={{ fontSize: 19 }}>{rental.total.toLocaleString()} W-KRW</InfoValue>
+          <InfoValue $highlight style={{ fontSize: 19 }}>{rental.totalAmount.toLocaleString()} W-KRW</InfoValue>
         </InfoItem>
       </Card>
 

@@ -12,14 +12,14 @@ function Recenter({ position }) {
 }
 
 const vehicleIcon = L.divIcon({
-  className: 'mobitrust-marker-wrap',
-  html: '<div class="mobitrust-marker">차</div>',
+  className: 'billicar-marker-wrap',
+  html: '<div class="billicar-marker">차</div>',
   iconSize: [42, 42], iconAnchor: [21, 21], popupAnchor: [0, -22],
 });
 
 const userIcon = L.divIcon({
-  className: 'mobitrust-marker-wrap',
-  html: '<div class="mobitrust-user-marker"><span></span></div>',
+  className: 'billicar-marker-wrap',
+  html: '<div class="billicar-user-marker"><span></span></div>',
   iconSize: [28, 28], iconAnchor: [14, 14],
 });
 

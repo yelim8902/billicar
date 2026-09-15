@@ -35,7 +35,7 @@ export function useLinkedWallet(user) {
     try {
       const normalizedAddress = ethers.getAddress(address);
       const message = [
-        'MobiTrust 지갑 연결',
+        'BilliCar 지갑 연결',
         '',
         '이 서명은 결제를 실행하지 않습니다.',
         `사용자: ${user.id}`,

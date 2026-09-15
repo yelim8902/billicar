@@ -137,7 +137,7 @@ const NavLabel = styled.span`
 const NAV = {
   renter: [
     { key: 'home', label: '홈', Icon: IconHome },
-    { key: 'book', label: '예약', Icon: IconCalendar },
+    { key: 'bookings', label: '예약', Icon: IconCalendar },
     { key: 'active', label: '내 렌탈', Icon: IconKey },
     { key: 'mypage', label: '마이', Icon: IconUser },
   ],
@@ -157,7 +157,7 @@ export default function Layout({ wallet, walletProfile, auth, currentPage, onNav
       <Shell>
         <TopBar>
           <LogoWordmark onClick={() => onNavigate(navItems[0].key)}>
-            Mobi<span>Trust</span>
+            Billi<span>Car</span>
           </LogoWordmark>
           <TopRight>
             <RoleChip onClick={onSwitchRole}>
