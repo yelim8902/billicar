@@ -80,7 +80,7 @@ export default function AuthScreen({ auth, onBack }) {
     <Backdrop>
       <Shell>
         <BackButton type="button" onClick={onBack} aria-label="이전 화면"><IconChevronLeft size={25} /></BackButton>
-        <Brand>MobiTrust</Brand>
+        <Brand>BilliCar</Brand>
         <Title>{mode === 'signin' ? '다시 만나서 반가워요' : '이웃과 차량을 공유해요'}</Title>
         <Description>
           {mode === 'signin'
@@ -96,13 +96,13 @@ export default function AuthScreen({ auth, onBack }) {
             <FormGroup>
               <Label htmlFor="display-name">이름 또는 닉네임</Label>
               <Input id="display-name" value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="모비" minLength={1} maxLength={40} required />
+                placeholder="빌리" minLength={1} maxLength={40} required />
             </FormGroup>
           )}
           <FormGroup>
             <Label htmlFor="email">이메일</Label>
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="hello@mobitrust.kr" autoComplete="email" required />
+              placeholder="hello@billicar.kr" autoComplete="email" required />
           </FormGroup>
           <FormGroup>
             <Label htmlFor="password">비밀번호</Label>

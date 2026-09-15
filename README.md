@@ -1,8 +1,8 @@
-# MobiTrust
+# BilliCar
 
 > 이웃의 유휴 차량을 빌리고 빌려주는, 스테이블코인 기반 P2P 카셰어링 서비스
 
-MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차주 정산 과정을 스마트컨트랙트로 투명하게 처리하는 블록체인 융합 해커톤 프로젝트입니다. 자주 변경되거나 개인정보가 포함된 데이터는 Supabase에 저장하고, 신뢰가 필요한 결제와 증명만 Kaia에 기록합니다.
+BilliCar는 생활권 안의 차량을 연결하고 대여료·보증금·차주 정산 과정을 스마트컨트랙트로 투명하게 처리하는 블록체인 융합 해커톤 프로젝트입니다. 자주 변경되거나 개인정보가 포함된 데이터는 Supabase에 저장하고, 신뢰가 필요한 결제와 증명만 Kaia에 기록합니다.
 
 ## 현재 구현 상태
 
@@ -10,7 +10,7 @@ MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차�
 
 - 모바일 중심 온보딩 및 사용자·호스트 화면
 - 직접 찾으러 가기 / 내 위치로 부르기 / 내 차 빌려주기 UI
-- OpenStreetMap 기반 실제 지도와 차량 마커
+- 실제 브라우저 위치 기반 거리 계산 및 가까운 순 정렬
 - MetaMask 연결 및 Kaia Kairos 테스트넷 자동 전환
 - Supabase 프로젝트와 PostgreSQL 마이그레이션
 - 차량, 예약, 운행, 결제, 정산, 지갑 데이터 모델
@@ -24,17 +24,19 @@ MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차�
 - VIN 원문 대신 SHA-256 해시 저장과 차량 번호 마스킹
 - 실제 차량과 데모 차량 12대를 함께 보여주는 지도·목록 데이터
 - 프로필, 지갑, 예약·차량·정산 요약을 제공하는 마이페이지
-- Supabase에 저장되는 실제 예약과 예약 취소·내역 화면
-- PostgreSQL exclusion constraint 기반 차량 시간 중복 예약 차단
+- **MockWKRW·RentalEscrow 스마트컨트랙트를 Kaia Kairos에 실제 배포**하고 예치(deposit)·정산(release) 연동
+- 예약 → 온체인 예치 → 이용 시작 → 반납 → 자동 정산까지 **실제 트랜잭션으로 end-to-end 검증 완료**
+- 호스트용 "내 차량 관리" / "수익 현황"(정산 내역 + Kaiascan 링크) 화면
 
 ### 개발 예정
 
-- W-KRW 데모 토큰 및 대여 에스크로 스마트컨트랙트
-- 정상 반납 시 보증금 환불과 차주·플랫폼 즉시 정산
+- 반납/정산(release) 권한을 플랫폼(owner) 외 주체로 확장
+- `payments`를 kind(대여료/보험료/보증금)별로 분리해서 기록
+- 예약 취소 시 온체인 환불(refund) 연동
 - 대여 전후 차량 상태 자료의 해시 기록 및 검증
-- 컨트랙트 이벤트와 Supabase 상태 동기화
+- 호스트 승인 단계 등 예약 상태 전이 고도화 (현재는 렌터 셀프서비스 모델)
 
-> 현재 W-KRW와 예약·정산 트랜잭션은 데모 UI입니다. 실제 가치가 연동된 원화 스테이블코인이 아닙니다.
+> W-KRW는 Kaia Kairos 테스트넷 전용 데모 ERC-20 토큰입니다. 실제 원화가 연동된 스테이블코인이 아니지만, 여기서의 예치·정산 트랜잭션은 시뮬레이션이 아니라 테스트넷에서 실제로 실행되고 Kaiascan에서 확인 가능합니다.
 
 ## 왜 블록체인을 사용하는가
 
@@ -45,7 +47,7 @@ MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차�
 | 서비스 데이터 | Supabase PostgreSQL | 사용자, 차량, 위치, 예약 시간, 이용 상태 |
 | 파일 원본 | Supabase Storage | 차량 사진, 대여 전후 점검 사진 |
 | 가치 이전 | Kaia 스마트컨트랙트 | 대여료·보증금 에스크로, 환불, 차주 정산 |
-| 위변조 증명 | Kaia 스마트컨트랙트 | 차량 점검 자료 해시와 기록 시점 |
+| 위변조 증명 | Kaia 스마트컨트랙트 | 차량 점검 자료 해시와 기록 시점 (예정) |
 
 위치와 사진 원본을 온체인에 공개하지 않으면서도, 정산 과정과 차량 상태 자료가 사후에 바뀌지 않았음을 검증할 수 있도록 구성합니다.
 
@@ -54,12 +56,10 @@ MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차�
 ```text
 호스트 차량 등록
 → 이용자가 지도에서 차량 선택
-→ W-KRW로 대여료와 보증금 예치
-→ 대여 전 차량 상태 자료의 해시 기록
-→ 이용 및 반납
-→ 반납 상태 확인
-→ 보증금 환불
-→ 차주 95% / 플랫폼 5% 즉시 분배
+→ W-KRW 승인(approve) 및 RentalEscrow에 대여료·보험료·보증금 예치(deposit)
+→ 이용 시작(픽업)
+→ 반납 → RentalEscrow.release() 호출
+→ 한 트랜잭션에서 차주 정산(수수료 10% 차감) · 플랫폼 수수료 · 보증금 환불이 동시에 처리
 → Kaiascan에서 거래 확인
 ```
 
@@ -67,8 +67,8 @@ MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차�
 
 - React 19, Create React App
 - styled-components
-- Leaflet, React Leaflet, OpenStreetMap
 - Supabase Auth, PostgreSQL, Storage
+- Solidity (RentalEscrow, MockWKRW), OpenZeppelin
 - ethers.js v6
 - Kaia Kairos Testnet (Chain ID 1001)
 - MetaMask
@@ -85,8 +85,8 @@ MobiTrust는 생활권 안의 차량을 연결하고 대여료·보증금·차�
 ### 설치
 
 ```bash
-git clone https://github.com/yelim8902/mobitrust-frontend.git
-cd mobitrust-frontend
+git clone https://github.com/yelim8902/billicar.git
+cd billicar
 npm install
 ```
 
@@ -119,12 +119,11 @@ npx supabase link --project-ref YOUR_PROJECT_REF --agent no
 npx supabase db push --linked --agent no
 ```
 
-마이그레이션 파일:
+마이그레이션 파일은 `supabase/migrations/`에 순서대로 있습니다 (초기 스키마 → 차량 이미지 스토리지 → 지갑 연결 → 데모 차량 인벤토리 → 예약 상태 전이 완화 → 정산 기록 허용 → 데모 보증금 조정). 자세한 테이블 관계와 상태 전이는 [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)를 참고하세요.
 
-- `supabase/migrations/202609150001_initial_mobitrust_schema.sql`
-- `supabase/migrations/202609150002_vehicle_image_storage.sql`
+## 스마트컨트랙트
 
-자세한 테이블 관계와 상태 전이는 [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md)를 참고하세요.
+Kaia Kairos 테스트넷에 배포된 컨트랙트 소스와 Remix 배포 가이드는 [`contracts/`](contracts/) 폴더를 참고하세요. 배포/연동 관련 알려진 제약, 진행 상황은 [`HANDOFF.md`](HANDOFF.md)에 정리되어 있습니다.
 
 ## 데이터 모델
 
@@ -148,11 +147,15 @@ auth.users
 ## 주요 디렉터리
 
 ```text
+contracts/                  # RentalEscrow / MockWKRW Solidity 소스, Remix 배포 가이드
+
 src/
 ├── components/             # 모바일 화면과 공통 UI
 ├── data/seedVehicles.js    # Supabase 미연결 시 데모 차량
 ├── hooks/
 │   ├── useVehicles.js      # 차량 조회 상태
+│   ├── useBookings.js      # 예약 조회/상태 전이
+│   ├── useContract.js      # RentalEscrow/MockWKRW 컨트랙트 인스턴스
 │   └── useWallet.js        # MetaMask 및 Kairos 연결
 ├── lib/supabase.js         # Supabase 클라이언트
 ├── services/               # 데이터 접근 계층
@@ -178,9 +181,9 @@ supabase/
 
 ## 개발 순서
 
-1. ~~MockWKRW와 RentalEscrow 컨트랙트 개발~~ → [contracts/](contracts/)에 작성 완료, Remix 배포 대기 중
-2. Kairos 배포 및 프론트 연동 (배포 방법: [contracts/README.md](contracts/README.md))
-3. 반납·환불·즉시 정산 구현
+1. ~~MockWKRW와 RentalEscrow 컨트랙트 개발 및 Kairos 배포~~ 완료 — 배포 주소는 [`HANDOFF.md`](HANDOFF.md) 참고
+2. ~~예치·이용·반납·정산 온체인 연동 및 end-to-end 검증~~ 완료
+3. 반납/정산 권한 확장, 예약 취소 시 환불 연동
 4. 차량 상태 자료 해시 검증
 5. 배포, 모바일 QA, 발표 데모 제작
 

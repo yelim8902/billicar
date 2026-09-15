@@ -1,4 +1,4 @@
-# MobiTrust 데이터 모델
+# BilliCar 데이터 모델
 
 ## 핵심 관계
 

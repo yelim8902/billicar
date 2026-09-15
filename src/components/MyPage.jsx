@@ -50,7 +50,7 @@ const VERIFICATION_LABEL = {
 export default function MyPage({ auth, wallet, walletProfile, onSwitchRole }) {
   const { stats, loading } = useMyPageStats(auth.user?.id);
   const [actionError, setActionError] = useState('');
-  const name = auth.profile?.display_name || 'MobiTrust 사용자';
+  const name = auth.profile?.display_name || 'BilliCar 사용자';
   const linkedAddress = walletProfile.linkedWallet?.address;
 
   const handleWalletAction = async () => {
@@ -67,7 +67,7 @@ export default function MyPage({ auth, wallet, walletProfile, onSwitchRole }) {
   return (
     <Screen>
       <PageTitle>마이페이지</PageTitle>
-      <PageSubtitle>내 계정과 MobiTrust 이용 현황을 확인하세요</PageSubtitle>
+      <PageSubtitle>내 계정과 BilliCar 이용 현황을 확인하세요</PageSubtitle>
       <Card>
         <Profile>
           <Avatar>{name.slice(0, 1).toUpperCase()}</Avatar>

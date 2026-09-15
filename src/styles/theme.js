@@ -1,4 +1,4 @@
-// MobiTrust 디자인 토큰
+// BilliCar 디자인 토큰
 // 토스/쏘카류 라이트 모바일 UI + 시그니처 그린을 기준으로 한 팔레트입니다.
 export const theme = {
   colors: {

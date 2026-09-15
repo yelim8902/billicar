@@ -125,7 +125,7 @@ function LoadingScreen() {
       minHeight: '100dvh', display: 'grid', placeItems: 'center',
       color: theme.colors.primary, fontSize: 16, fontWeight: 800,
     }}>
-      MobiTrust
+      BilliCar
     </div>
   );
 }

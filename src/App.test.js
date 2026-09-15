@@ -25,9 +25,9 @@ jest.mock('./hooks/useLinkedWallet', () => ({
   }),
 }));
 
-test('renders the MobiTrust onboarding choices', () => {
+test('renders the BilliCar onboarding choices', () => {
   render(<App />);
-  expect(screen.getByRole('heading', { level: 1, name: 'Mobi Trust' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { level: 1, name: 'Billi Car' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /차량 빌려타기/ })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /내 차 빌려주기/ })).toBeInTheDocument();
 });

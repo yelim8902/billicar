@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title RentalEscrow
-/// @notice MobiTrust 예약 결제(대여료+보험료+보증금)를 예치했다가, 정상 반납 시 차주/플랫폼에게
+/// @notice BilliCar 예약 결제(대여료+보험료+보증금)를 예치했다가, 정상 반납 시 차주/플랫폼에게
 ///         즉시 정산하거나 취소 시 렌터에게 환불하는 컨트랙트입니다.
 ///
 ///         Supabase `bookings.id`는 UUID라 온체인 키로 그대로 쓸 수 없어서, 프론트엔드에서

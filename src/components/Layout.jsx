@@ -157,7 +157,7 @@ export default function Layout({ wallet, walletProfile, auth, currentPage, onNav
       <Shell>
         <TopBar>
           <LogoWordmark onClick={() => onNavigate(navItems[0].key)}>
-            Mobi<span>Trust</span>
+            Billi<span>Car</span>
           </LogoWordmark>
           <TopRight>
             <RoleChip onClick={onSwitchRole}>

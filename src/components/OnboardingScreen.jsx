@@ -38,7 +38,7 @@ export default function OnboardingScreen({ onSelect }) {
     <Screen>
       <Hero />
       <Brand>
-        <Logo>Mobi<span>Trust</span></Logo>
+        <Logo>Billi<span>Car</span></Logo>
         <Headline>이웃의 차가<br/>나의 이동이 되는 순간</Headline>
         <NeighborBadge><NeighborDots><span/><span/></NeighborDots>이웃 간 차량 공유</NeighborBadge>
       </Brand>

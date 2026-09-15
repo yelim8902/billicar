@@ -26,7 +26,7 @@ const Logout = styled.button`
 
 export default function UserMenu({ auth }) {
   const [open, setOpen] = useState(false);
-  const name = auth.profile?.display_name || auth.user?.email || 'MobiTrust 사용자';
+  const name = auth.profile?.display_name || auth.user?.email || 'BilliCar 사용자';
   const handleSignOut = async () => {
     setOpen(false);
     await auth.signOut();
