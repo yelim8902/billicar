@@ -88,9 +88,48 @@ const MenuButton = styled.button`
   cursor: pointer;
 `;
 
-export default function WalletConnect({ wallet }) {
+const LinkStatus = styled.p`
+  padding: 9px 0;
+  border-top: 1px solid ${theme.colors.border};
+  color: ${p => (p.$linked ? theme.colors.primaryDark : theme.colors.textSecondary)};
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+`;
+
+const LinkButton = styled.button`
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 10px;
+  background: ${theme.colors.primaryLight};
+  color: ${theme.colors.primaryDark};
+  font-family: ${theme.fonts.body};
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+`;
+
+const WalletError = styled.p`
+  margin-top: 7px;
+  color: ${theme.colors.danger};
+  font-size: 10px;
+  line-height: 1.4;
+`;
+
+export default function WalletConnect({ wallet, walletProfile }) {
   const { account, balance, status, isConnected, connect, disconnect } = wallet;
   const [open, setOpen] = useState(false);
+  const linkedAddress = walletProfile.linkedWallet?.address;
+  const isCurrentWalletLinked = linkedAddress?.toLowerCase() === account?.toLowerCase();
+
+  const handleLink = async () => {
+    try {
+      await walletProfile.link(account);
+    } catch {
+      // Hook exposes the user-facing error below.
+    }
+  };
 
   if (isConnected) {
     return (
@@ -102,6 +141,19 @@ export default function WalletConnect({ wallet }) {
         {open && (
           <Menu onMouseLeave={() => setOpen(false)}>
             <MenuBalance>잔액 <b>{balance ?? '-'} KAIA</b></MenuBalance>
+            <LinkStatus $linked={isCurrentWalletLinked}>
+              {isCurrentWalletLinked
+                ? '이 계정에 연결된 지갑이에요'
+                : linkedAddress
+                  ? '다른 지갑이 계정에 연결되어 있어요'
+                  : '로그인 계정에 지갑을 연결해주세요'}
+            </LinkStatus>
+            {!isCurrentWalletLinked && (
+              <LinkButton onClick={handleLink} disabled={walletProfile.loading}>
+                {walletProfile.loading ? '서명 확인 중…' : linkedAddress ? '현재 지갑으로 변경' : '이 지갑 연결하기'}
+              </LinkButton>
+            )}
+            {walletProfile.error && <WalletError>{walletProfile.error}</WalletError>}
             <MenuButton onClick={() => { disconnect(); setOpen(false); }}>
               <IconLogout size={14} /> 연결 해제
             </MenuButton>

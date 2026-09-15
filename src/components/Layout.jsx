@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import WalletConnect from './WalletConnect';
+import UserMenu from './UserMenu';
 import { IconHome, IconCalendar, IconKey, IconDocument, IconCar, IconChart, IconAlert } from './ui/Icon';
 
 const Backdrop = styled.div`
@@ -146,7 +147,7 @@ const NAV = {
   ],
 };
 
-export default function Layout({ wallet, currentPage, onNavigate, role, onSwitchRole, children }) {
+export default function Layout({ wallet, walletProfile, auth, currentPage, onNavigate, role, onSwitchRole, children }) {
   const navItems = NAV[role] || NAV.renter;
 
   return (
@@ -160,7 +161,8 @@ export default function Layout({ wallet, currentPage, onNavigate, role, onSwitch
             <RoleChip onClick={onSwitchRole}>
               {role === 'renter' ? '이용자' : '호스트'} 전환
             </RoleChip>
-            <WalletConnect wallet={wallet} />
+            <WalletConnect wallet={wallet} walletProfile={walletProfile} />
+            <UserMenu auth={auth} />
           </TopRight>
         </TopBar>
 

@@ -61,11 +61,12 @@ REACT_APP_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 
 ## 다음 연결 순서
 
-1. Supabase Auth 로그인과 지갑 주소 연결
-2. 호스트 차량 등록을 `vehicles`, `vehicle_photos` insert로 교체
-3. 차량 검색에 현재 위치 기반 거리 계산 추가
-4. 예약 폼을 `bookings` insert로 교체
-5. 결제 트랜잭션 확인 후 `payments` 상태 갱신
-6. 운행 종료 후 `rentals`, `settlements` 생성
+1. 호스트 차량 등록을 `vehicles`, `vehicle_photos` insert로 교체
+2. 차량 검색에 현재 위치 기반 거리 계산 추가
+3. 예약 폼을 `bookings` insert로 교체
+4. 결제 트랜잭션 확인 후 `payments` 상태 갱신
+5. 운행 종료 후 `rentals`, `settlements` 생성
+
+로그인 사용자는 MetaMask 메시지 서명 후 기본 지갑을 연결할 수 있습니다. 현재 브라우저에서 서명을 검증하는 MVP 단계이며, 결제 기능을 연결하기 전 Edge Function에서 nonce와 서명을 재검증하도록 강화합니다.
 
 결제 확정과 정산 상태 변경은 클라이언트가 직접 수행하지 않고 Edge Function 또는 신뢰할 수 있는 백엔드에서 처리해야 합니다.

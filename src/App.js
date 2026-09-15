@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useWallet } from './hooks/useWallet';
+import { useAuth } from './hooks/useAuth';
+import { useLinkedWallet } from './hooks/useLinkedWallet';
 import { theme } from './styles/theme';
 import Layout from './components/Layout';
 import OnboardingScreen from './components/OnboardingScreen';
+import AuthScreen from './components/AuthScreen';
 import VehicleList from './components/VehicleList';
 import BookingForm from './components/BookingForm';
 import ActiveRental from './components/ActiveRental';
@@ -12,7 +15,9 @@ import HomeDashboard from './components/HomeDashboard';
 import { Screen } from './components/ui/Primitives';
 
 export default function App() {
+  const auth = useAuth();
   const wallet = useWallet();
+  const walletProfile = useLinkedWallet(auth.user);
 
   const [role,            setRole]            = useState(null);   // null | 'renter' | 'host'
   const [currentPage,     setCurrentPage]     = useState('vehicles');
@@ -60,6 +65,14 @@ export default function App() {
     return <OnboardingScreen onSelect={handleRoleSelect} />;
   }
 
+  if (auth.loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!auth.isAuthenticated) {
+    return <AuthScreen auth={auth} onBack={() => setRole(null)} />;
+  }
+
   const renderPage = () => {
     switch (currentPage) {
       case 'vehicles':
@@ -88,6 +101,8 @@ export default function App() {
     <>
       <Layout
         wallet={wallet}
+        walletProfile={walletProfile}
+        auth={auth}
         currentPage={currentPage}
         onNavigate={setCurrentPage}
         role={role}
@@ -97,6 +112,17 @@ export default function App() {
       </Layout>
       <TransactionLog logs={txLogs} />
     </>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <div style={{
+      minHeight: '100dvh', display: 'grid', placeItems: 'center',
+      color: theme.colors.primary, fontSize: 16, fontWeight: 800,
+    }}>
+      MobiTrust
+    </div>
   );
 }
 
