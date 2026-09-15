@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 // 브라우저 위치 권한을 요청해 [위도, 경도]를 반환. 거부/미지원 시 error만 채워짐
 // (호출한 쪽에서 error가 있으면 거리 표시를 생략하거나 기본 정렬로 보여주면 됨)
@@ -7,12 +7,14 @@ export function useUserLocation() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refresh = useCallback(() => {
     if (!navigator.geolocation) {
       setError('이 기기에서는 위치를 사용할 수 없어요.');
       setLoading(false);
       return;
     }
+    setLoading(true);
+    setError('');
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         setPosition([coords.latitude, coords.longitude]);
@@ -26,5 +28,7 @@ export function useUserLocation() {
     );
   }, []);
 
-  return { position, error, loading };
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { position, error, loading, refresh };
 }
